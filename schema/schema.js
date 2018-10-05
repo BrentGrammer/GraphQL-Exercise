@@ -2,8 +2,8 @@
  * A Schema tells graphQL what type of data your working with and how it is arranged in the database; what properties are on each object (or fields in 
  * each table in the case of a relational database.)
  */
-
- const _ = require('lodash');
+const axios = require('axios'); 
+//const _ = require('lodash');
 
  // mock data store
  const users = [
