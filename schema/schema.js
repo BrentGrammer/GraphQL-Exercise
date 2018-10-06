@@ -23,19 +23,46 @@ const {
   GraphQLSchema
 } = graphql;
 
-// use GRaphQLObjectType to tell graphql what a user looks like - i.e. what properties is it supposed to have?
-/* There are two required properties: 
+/* ==========================
+          DEFINE TYPES
+   ========================== */
+
+// use GRaphQLObjectType to tell graphql what a user or other object fetched looks like - i.e. what properties is it supposed to have?
+/* 
+    There are two required properties when using GraphQLObjectType to define a type: 
     name - A string that describes the type being defined, usually the name of the type - by convention
     the name's first letter is capitalized.
     fields  - an object that defines and tells graphql the properties that an entity has.
 */
+
+const CompanyType = new GraphQLObjectType({
+  name: 'Company',
+  fields: {
+    id: { type: GraphQLString },
+    name: { type: GraphQLString},
+    description: { type: GraphQLString }
+  }
+});
+
 const UserType = new GraphQLObjectType({
   name: 'User',
   // set the type of each field in an object with a type property:
   fields: {
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
-    age: { type: GraphQLInt }
+    age: { type: GraphQLInt },
+    // add company as a field to create an association/relation of the UserType to the CompanyType:
+    company: {
+      // define the type of data that is received when querying for this associated field:
+      type: CompanyType,
+      // use resolver function to get the company info based on the company id that is on the user entry
+      // The companyId on the user that you can use to get the company entry will be in the parentValue argument - it will be the user that was fetched and have the companyId on it you can use.
+      resolve(parentValue, args) {
+        //console.log(parentValue)
+        return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+          .then(resp => resp.data);
+      }
+    }
   }
 });
 
@@ -46,7 +73,7 @@ const RootQuery = new GraphQLObjectType({
   // fields lists details on what type of data you can query GraphQL for
   fields: {
     user: {
-      // if querying a user, type indicates what type will be returned - a UserType will be returned
+      // if querying a user, type indicates what type will be returned - a UserType will be returned with associated fields available
       type: UserType,
       /* describes the arguments that are required for the user query (in this case the query needs an id param) and 
          specifies their shape and type. */
@@ -57,10 +84,23 @@ const RootQuery = new GraphQLObjectType({
       resolve(parentValue, args) {
         /* the resolver walks through the list of users from the store and finds the user node with the id = the id arg 
            required in the query. */
-        return _.find(users, { id: args.id })
+        //return _.find(users, { id: args.id }) // <-- this was a synchronous request using lodash to get static data
+
+        // Asynchronous request using axios:
+        return axios.get(`http://localhost:3000/users/${args.id}`)
+          .then(resp => resp.data); // <-- axios returns a data key with the resp data in it - this is to par it down so whatever then is attached to this returned promise will be able to just access the data directly from the nested data prop.
+
         // Note: return raw javascript objects or JSON in resolver and GraphQL will take care of typing and cpnversion behind the scenes.
         // If you return a promise in the resolver, then graphql detects that it is an asynchronous request automatically.
         // (Almost all fetching in a node app is going to be asynchronous so you return a promise usually)
+      }
+    },
+    company: {
+      type: CompanyType,
+      args: { id: { type: GraphQLString } },
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${args.id}`)
+          .then(resp => resp.data);
       }
     }
   }
