@@ -132,6 +132,11 @@ const RootQuery = new GraphQLObjectType({
   }
 })
 
+/* =======================
+          MUTATIONS
+   ======================= */
+
+   // define a root mutation which will contain the various mutation operations in the fields key:
 const mutation = new GraphQLObjectType({
   name: 'Mutation',
   // The name of the fields in a mutation should describe the kind of operation that is going to be executed:
