@@ -136,7 +136,7 @@ const RootQuery = new GraphQLObjectType({
           MUTATIONS
    ======================= */
 
-   // define a root mutation which will contain the various mutation operations in the fields key:
+// define a root mutation which will contain the various mutation operations in the fields key:
 const mutation = new GraphQLObjectType({
   name: 'Mutation',
   // The name of the fields in a mutation should describe the kind of operation that is going to be executed:
@@ -185,7 +185,7 @@ const mutation = new GraphQLObjectType({
   }
 });
 
-// builds a schema from the root query passed in - takes an object with a query key; used here to build a schema based on the Root Query.
+// builds a schema from the object passed in with the root query and root mutation set to keys.
 // export the result of the schema created to be accessible to the rest of your application.
 module.exports = new GraphQLSchema({
   query: RootQuery,
