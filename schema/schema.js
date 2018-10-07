@@ -20,7 +20,9 @@ const {
   GraphQLString, // these are used to set the types of the properties to let graphql know what type they are.
   GraphQLInt,
   // GraphQLSchema is a helper that takes in a root query and returns a graphql schema instance
-  GraphQLSchema
+  GraphQLSchema,
+  GraphQLList, // used to wrap a type returned in a type definition to establish a one to many relationship.
+  GraphQLNonNull // used for validation - wrap the type value with the new GraphQLNonNull() helper.
 } = graphql;
 
 /* ==========================
@@ -36,18 +38,37 @@ const {
 */
 
 const CompanyType = new GraphQLObjectType({
+  // name is how you can reference the type in graphQL code (i.e. to create a fragment for it)
   name: 'Company',
-  fields: {
+  /* To resolve order of operations errors with circular references (two types reference each other), wrap the fields prop
+     in an arrow function which returns the object of props/values. 
+     This defines the function but does not execute it until after the entire file has executed and all consts are declared.
+     This is leveraging closures and hoisting in Javascript so that the object will be returned by the function when fields 
+     key is referenced in a query after all consts are defined.
+  */
+  fields: () => ({
     id: { type: GraphQLString },
     name: { type: GraphQLString},
-    description: { type: GraphQLString }
-  }
+    description: { type: GraphQLString },
+    // Adding this field links the relationship to the users entities and shows GraphQL how to get the users for the company:
+    users: {
+      // This sets up a ONE-TO-MANY Relationship;
+      // Set the type to expect a returned LIST of user types by wrapping it in the library method GraphQLList():
+      type: new GraphQLList(UserType),
+      resolve(parentValue, args) {
+        /* using the parentValue arg pointing to current company instance, get the list of users from the API data 
+           store assoc. with the company id. */
+        return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
+          .then(resp => resp.data);
+      }
+    }
+  })
 });
 
 const UserType = new GraphQLObjectType({
   name: 'User',
   // set the type of each field in an object with a type property:
-  fields: {
+  fields: () => ({
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
@@ -63,9 +84,14 @@ const UserType = new GraphQLObjectType({
           .then(resp => resp.data);
       }
     }
-  }
+  })
 });
 
+
+/* ============================
+            ROOT QUERY
+   ============================ */
+   
 /* Root Query is the entry point for GraphQL into your db data - it points GraphQL to a starting point for getting related data
 from the db */
 const RootQuery = new GraphQLObjectType({
@@ -73,7 +99,7 @@ const RootQuery = new GraphQLObjectType({
   // fields lists details on what type of data you can query GraphQL for
   fields: {
     user: {
-      // if querying a user, type indicates what type will be returned - a UserType will be returned with associated fields available
+      // type is set to what type of data the resolve function returns:
       type: UserType,
       /* describes the arguments that are required for the user query (in this case the query needs an id param) and 
          specifies their shape and type. */
@@ -106,8 +132,57 @@ const RootQuery = new GraphQLObjectType({
   }
 })
 
-// builds a schema from the query passed in - takes an object with a query key; used here to build a schema based on the Root Query.
+const mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  // The name of the fields in a mutation should describe the kind of operation that is going to be executed:
+  fields: {
+   addUser: {
+     // type refers to the type of data returned by the resolve function
+     // Note: sometimes the type of data you're operating on and the type that is returned will not be the same.
+     type: UserType,
+     args: {
+      firstName: { type: new GraphQLNonNull(GraphQLString) },
+      age: { type: new GraphQLNonNull(GraphQLInt) },
+      companyId: { type: GraphQLString }
+     },
+     // the args second argument is destructured (it contains the args defined above passed in with the query)
+     resolve(parentValue, { firstName, age }) {
+       // This is where you could access the database and query it using the args provided...
+       return axios.post(`http://localhost:3000/users`, { firstName, age })
+         .then(res => res.data);
+     }
+   },
+   deleteUser: {
+     type: UserType,
+     args: {
+       id: { type: new GraphQLNonNull(GraphQLString) }
+     },
+     resolve(parentValue, args) {
+       return axios.delete(`http://localhost:3000/users/${args.id}`)
+         .then(res => res.data);
+     }
+   },
+   editUser: {
+     type: UserType,
+     args: {
+       // Only the id is required to edit a user and the other args are optional
+      id: { type: new GraphQLNonNull(GraphQLString ) },
+      firstName: { type: GraphQLString },
+      age: { type: GraphQLInt },
+      companyId: { type: GraphQLString }
+     },
+     resolve(parentValue, args) {
+       // Note: args will contain any parameters set, so just pass it in directly as the object for the response body:
+       axios.patch(`http://localhost:3000/users/${args.id}`, args)
+         .then(res => res.data);
+     }
+   }
+  }
+});
+
+// builds a schema from the root query passed in - takes an object with a query key; used here to build a schema based on the Root Query.
 // export the result of the schema created to be accessible to the rest of your application.
 module.exports = new GraphQLSchema({
-  query: RootQuery
+  query: RootQuery,
+  mutation
 });
