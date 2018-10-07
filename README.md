@@ -9,6 +9,6 @@ Topics covered:
 - Making asynchronous calls and query requests to third party data stores
 - Resolving Circular References (Order of Operations Error)
 - Schemas and Query building
-- Query Fragment
+- Query Fragments
 - Mutations
 - Multiple app builds using GraphQL
