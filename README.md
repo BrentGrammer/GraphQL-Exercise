@@ -12,4 +12,5 @@ Topics covered:
 - Schemas and Query building
 - Query Fragments
 - Mutations
+- Query Variables for using component state based data in mutations
 - Multiple app builds using GraphQL

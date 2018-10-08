@@ -1,2 +1,2 @@
 # Lyrical-GraphQL
-Front end integration with React Apollo and Apollo Client
+React CRUD app with Front end integration using React Apollo and Apollo Client
