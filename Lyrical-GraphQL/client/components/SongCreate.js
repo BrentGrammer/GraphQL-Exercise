@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
-
+import { Link } from 'react-router';
+import { hashHistory } from 'react-router';
 
 
 class SongCreate extends Component {
@@ -18,15 +19,23 @@ class SongCreate extends Component {
     // mutations will have access to props.mutate() which takes a config object with a variables prop:
     this.props.mutate({
       // this is where you define query variables for the mutation:
-      variables: {
-        title: this.state.title
-      }
+      variables: { title: this.state.title },
+      /* this is builtin to solve the problem in Apollo of re-rendering a list after a mutation (normally Apollo will not 
+          re-run the query to fetch the updated list of data to display.) 
+         refetchQueries takes an array of queries that will be run after the mutation successfully completes. */
+      refetchQueries: [{ }]
+    })
+    // props.mutate() returns a promise that you can chain a .then to for actions after the mutation is complete:
+    .then(() => {
+      // this redirects the user after the song is created to the songs list index page:
+      hashHistory.push('/')
     });
   }
   
   render() {
     return (
       <div>
+        <Link to="/">Back</Link>
         <h3>Create New Song</h3>
         <form onSubmit={this.onSubmit.bind(this)}>
           <label>Enter Song Title: </label>
