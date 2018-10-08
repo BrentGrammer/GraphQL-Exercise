@@ -1,4 +1,4 @@
-## GraphQL Exercise project
+## GraphQL Exercise projects
 
 Following: [Stephen Grider's course on Udemy](https://www.udemy.com/graphql-with-react-course/)
 
