@@ -3,6 +3,7 @@ import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
 import { Link } from 'react-router';
 import { hashHistory } from 'react-router';
+import query from '../queries/fetchSongs';
 
 
 class SongCreate extends Component {
@@ -15,6 +16,7 @@ class SongCreate extends Component {
   }
 
   onSubmit(event) {
+    /* The flow of this update mutation is: 1) mutation run, 2) getsongs refetched 3) user redirected to list page */
     event.preventDefault();
     // mutations will have access to props.mutate() which takes a config object with a variables prop:
     this.props.mutate({
@@ -22,8 +24,9 @@ class SongCreate extends Component {
       variables: { title: this.state.title },
       /* this is builtin to solve the problem in Apollo of re-rendering a list after a mutation (normally Apollo will not 
           re-run the query to fetch the updated list of data to display.) 
-         refetchQueries takes an array of queries that will be run after the mutation successfully completes. */
-      refetchQueries: [{ }]
+         refetchQueries takes an array of queries that will be run after the mutation successfully completes.
+         There are two props on the objects passed in: query: and variables: */
+      refetchQueries: [{ query }]
     })
     // props.mutate() returns a promise that you can chain a .then to for actions after the mutation is complete:
     .then(() => {

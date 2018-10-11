@@ -1,19 +1,30 @@
 import React, { Component } from 'react';
-// The graphql-tag library aids in constructing grapql queries client-side.
-import gql from 'graphql-tag';
 // This is used to bond the query to the component:
 import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 import { Link } from 'react-router';
+import query from '../queries/fetchSongs';
+
 
 class SongList extends Component {
+  onSongDelete(id) {
+    this.props.mutate({ variables: { id } })
+      .then(() => {
+        this.props.data.refetch()
+      })
+  }
 
   // create a helper method to iterate over the data returned from graphql and return a list
   renderSongs() {
-    return this.props.data.songs.map(song => {
+    // song is desctructured to get the id and title for cleaner reading of code:
+    return this.props.data.songs.map(({ id, title }) => {
       return (
         // traditionally you use the id of the model data you are fetching as the key in a React list
-        <li key={song.id} className="collection-item">
-          {song.title}
+        <li key={id} className="collection-item">
+          {title}
+          <i className="material-icons" onClick={() => this.onSongDelete(id)}>
+            delete
+          </i>
         </li>
       );
     });
@@ -27,7 +38,6 @@ class SongList extends Component {
 
     return (
       <div>
-     
         <ul className="collection">
           {this.renderSongs()}
         </ul>
@@ -42,17 +52,27 @@ class SongList extends Component {
   }
 }
 
-/* graphql from react-apollo will create a data prop on the response object in props and this query defines what property
-   the values requested will be in (in this case, this.props.data.songs): */
-const query = gql`
-  {
-    songs {
+
+const mutation = gql`
+  mutation DeleteSong($id: ID) {
+    deleteSong(id: $id) {
       id
-      title
     }
   }
 `;
 
+/* graphql from react-apollo will create a data prop on the response object in props and this query defines what property
+   the values requested will be in (in this case, this.props.data.songs).
+
+   mutations will be accessible on props.mutate() and will not be automatically run by the graphql wrapper until that prop
+   method is called.   
+*/
+
 // This uses the helper from react-apollo to bond the graphql query to the component.
 // This will cause the query to be executed when the component is rendered to the screen.
-export default graphql(query)(SongList);
+// Note: if the same query is run in a refetch queries call, then Apollo will detect that and not re-run the same query passed here.
+export default graphql(mutation)(
+  graphql(query)(SongList)
+);
+
+// The above syntax is needed when multiple queries/mutations are called in the same component.  graphql can only handle one argument/query at a time.

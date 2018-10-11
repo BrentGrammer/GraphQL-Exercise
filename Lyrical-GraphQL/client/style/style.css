@@ -1,0 +1,9 @@
+/* css for individual row of a song in the songs list view */
+.collection-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.material-icons {
+  cursor: pointer;
+}
