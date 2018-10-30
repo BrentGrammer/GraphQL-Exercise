@@ -14,4 +14,5 @@ Topics covered:
 - Query Fragments
 - Mutations
 - Query Variables for using component state based data in mutations
+- Named Queries in Components and passing data as query variables
 - Multiple app builds using GraphQL

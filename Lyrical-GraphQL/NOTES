@@ -1,0 +1,65 @@
+
+KEY POINTS:
+
+-Queries are excuted automatically by the graphql wrapper helper from react-apollo in the component when it renders - result is 
+ available in props.data when it arrives asynchronously.  props.data.loading is a boolean present on all queries and can be used
+ to show a loading screen while data is being retreived.
+-Mutations are called manually with props.mutate()
+
+
+Basic workflow for making a query and using it in a component:
+
+1) Test the query in graphiql
+
+2) Make a query file and import graphql-tag helper, set up gql`` syntax and copy-paste the query from graphiql in between.
+   immediately export default:
+
+   Ex query file in queries folder:
+
+    import gql from 'graphl-tag';
+
+    export default gql`
+      query SongQuery($id: ID!) {
+        song(id: $id) {
+          id
+          title
+        }
+      }
+    `;
+
+  3) In Component file to use query, import graphql helper as named export from react-apollo to use query in component
+     by creating a HOC with them and also import the query file.
+
+     ex of using graphql at bottom of Component file: export default graphql(<query>)(<Component>);
+     // The graphql wrapper executes the query when it runs. The result will be available in props.data in the component.
+        **IMPORTANT: The query execution request is asynchronous and the component will be rendered initially without the data.  
+        After the data is retrieved successfully, the component will be re-rendered with the data.
+
+    Ex:
+
+    import React, { Component } from 'react';
+    import { graphql } from 'react-apollo';
+    import fetchSongs from '../fetchSongs';
+
+    class SongDetail extends Component {
+
+      render() {
+        return (
+          if (this.props.data.loading) { return <div>Loading...</div>; }
+
+          <div>
+            <ul className="collection">
+              {this.renderSongs()} // pulls from props.data
+            </ul>
+            <Link 
+              to="/songs/new"
+              className="btn-floating btn-large red right"
+            >
+              <i className="material-icons">add</i>
+            </Link>
+          </div>
+        );
+      }
+    }
+
+    export default graphql(fetchSongs)(SongDetail);
