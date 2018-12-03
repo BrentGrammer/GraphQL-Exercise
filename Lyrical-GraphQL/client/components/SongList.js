@@ -21,7 +21,9 @@ class SongList extends Component {
       return (
         // traditionally you use the id of the model data you are fetching as the key in a React list
         <li key={id} className="collection-item">
-          {title}
+          <Link to={`/songs/${id}`}>
+            {title}        
+          </Link>
           <i className="material-icons" onClick={() => this.onSongDelete(id)}>
             delete
           </i>

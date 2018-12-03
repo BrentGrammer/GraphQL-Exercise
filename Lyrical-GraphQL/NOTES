@@ -6,6 +6,11 @@ KEY POINTS:
  to show a loading screen while data is being retreived.
 -Mutations are called manually with props.mutate()
 
+import gql from 'graphql-tag';          <-- used to allow writing graphql queries in components
+import { graphql } from 'react-apollo'; <-- used to sandwich the query with the component (in HOC wrapper)
+Ex: 
+  export default graphql(mutation)(LyricCreate);
+
 
 Basic workflow for making a query and using it in a component:
 
@@ -63,3 +68,22 @@ Basic workflow for making a query and using it in a component:
     }
 
     export default graphql(fetchSongs)(SongDetail);
+
+    ================
+
+    ALWAYS CHECK THAT DATA IS PRESENT (COMPONENT WILL TRY TO RENDER DATA THAT MAY NOT BE PRESENT):
+
+    1) Check the props.data object set by graph QL for either the property that will be present from the query 
+    (i.e. props.data.song or whatever).
+
+    2) check the props.data.loading property (will be a boolean) before rendering the data in the component.
+
+    Ex:
+
+    render() {
+      if (!song) {
+        return <div>Loading...</div>
+      }
+
+      ...render component otherwise
+    }
